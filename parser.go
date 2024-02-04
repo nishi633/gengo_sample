@@ -10,11 +10,14 @@ import (
 %union {
 // 自作言語で使うトークンの宣言
   num int
+  str string
 }
 
 // プログラムの構成要素を指定
 %type<num> program expr
+%type<str> program show
 %token<num> NUMBER
+%token<str> STRING
 
 // 演算の優先度の指定
 %left '+','-'
@@ -40,7 +43,8 @@ expr // expr要素の定義
   | expr '-' expr { $$ = $1 - $3 }
   | expr '*' expr { $$ = $1 * $3 }
   | expr '/' expr { $$ = $1 / $3 }
-
+  : STRING
+  | '(' expr ')' { $$ = $2 }
 %%
 
 // 最低限必要な構造体を定義
@@ -64,6 +68,12 @@ func (p *Lexer) Lex(lval *yySymType) int {
       lval.num = int(c - '0') // ?
       return NUMBER
     }
+    if c == 'm' && p.src[p.index+1] == 'u' {
+      continue
+    }
+    if c == 'u' && p.src[p.index-1] == 'm' {
+      return ''
+    }
   }
   return -1
 }
@@ -83,4 +93,3 @@ func main() {
   yyParse(lexer)
   println("計算結果:", lexer.result)
 }
-
